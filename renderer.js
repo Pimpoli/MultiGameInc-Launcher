@@ -1,10 +1,11 @@
 // renderer.js  (archivo completo - VERSION CORREGIDA)
 // Fixes principales:
 //  - Robustez al cargar index.json remoto: intenta parsear texto, limpia comentarios/trailing-commas antes de JSON.parse
-//  - Fallback local mejorado: prueba rutas relativas ('index.json', './index.json', './assets/index.json') en lugar de file:// absoluto
+//  - Fallback local mejorado: prueba rutas relativas ('index.json', './index.json', './assets/index.json')
 //  - Si todo falla, no lanza excepción crítica: deja indexData vacío y muestra mensajes amigables en UI/logs
 //  - Mantiene compatibilidad con window.api expuesto por preload (selectInstallPath, installVersion, getDefaultMinecraftPath, listInstallers, onInstallProgress)
 //  - Añadida: muestra versión local/remota y fecha en la consola del launcher (UI). Marca en rojo si está desactualizado.
+//  - Corregido: función formatDateString (antes faltante)
 
 /* ---------------------------
    Constants / DOM refs
@@ -301,6 +302,26 @@ function compareSemver(a, b) {
   return 0;
 }
 
+// Format date string to dd/mm/yyyy (handles ISO and common formats). Added to fix missing function error.
+function formatDateString(input) {
+  try {
+    if (!input) return null;
+    const d = new Date(input);
+    if (!isNaN(d.getTime())) {
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
+    // fallback: try YYYY-MM-DD substring
+    const m = String(input).match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+    return String(input);
+  } catch (e) {
+    return String(input);
+  }
+}
+
 /* ---------------------------
    Installed heuristics (localStorage)
    --------------------------- */
@@ -375,7 +396,6 @@ async function showVersionStatusInUI() {
     if (!chk || !chk.ok) {
       logWarn('checkForUpdates falló o devolvió error:', chk && chk.error ? chk.error : '(sin detalles)');
       // still try to fetch local app_version.json via fetch (from app files packaged in renderer)
-      // note: fetching './app_version.json' will work if file is served by electron as file://
       let localV = '0.0.0';
       try {
         const res = await fetch('./app_version.json', { cache: 'no-store' });
@@ -389,7 +409,7 @@ async function showVersionStatusInUI() {
     }
 
     const res = chk.result || {};
-    const localVersion = res.localVersion || res.localVersion || '0.0.0';
+    const localVersion = res.localVersion || '0.0.0';
     const remoteVersion = res.remoteVersion || null;
 
     // try to fetch launcher-version.json for date (if present)
@@ -397,7 +417,6 @@ async function showVersionStatusInUI() {
     try {
       remoteMeta = await fetchJsonWithDetails('https://raw.githubusercontent.com/Pimpoli/MultiGameInc-Launcher/main/launcher-version.json');
     } catch (e) {
-      // ignore - might not exist or be blocked
       remoteMeta = null;
     }
     const remoteDateRaw = remoteMeta && (remoteMeta.date || remoteMeta.published_at) ? (remoteMeta.date || remoteMeta.published_at) : null;
@@ -587,7 +606,6 @@ async function loadManifestFor(manifestPath) {
     loaderSelect.disabled = true;
   }
 }
-
 
 /* ---------------------------
    Populate loader options: listInstallers fallback to manifest entries
