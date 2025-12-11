@@ -1,0 +1,13 @@
+﻿!macro customInstall
+  MessageBox MB_YESNO|MB_ICONQUESTION "¿Deseas crear un acceso directo en el escritorio?" IDYES create_shortcut IDNO done
+
+  create_shortcut:
+    CreateShortCut "$DESKTOP\MultiGameInc-Launcher.lnk" "$INSTDIR\MultiGameInc-Launcher.exe" "" "$INSTDIR\assets\MultiGameInc.ico"
+    Goto done
+
+  done:
+!macroend
+
+!macro customUnInstall
+  Delete "$DESKTOP\MultiGameInc-Launcher.lnk"
+!macroend
