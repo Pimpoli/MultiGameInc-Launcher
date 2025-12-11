@@ -1,41 +1,53 @@
 {
-  "name": "multi-game-inc-launcher",
-  "version": "0.1.0",
-  "description": "Multi Game Inc Launcher - instala modpacks desde GitHub",
+  "name": "multigameinc-launcher",
+  "productName": "MultiGameInc-Launcher",
+  "version": "1.0.0",
   "main": "main.js",
+  "description": "Breve descripción de mi app",
+  "author": "Mi Nombre <multigameinc@gmail.com>",
   "scripts": {
-    "start": "electron .",
-    "dist": "electron-builder --publish never"
-  },
-  "author": "Multi Game Inc",
-  "license": "MIT",
-  "dependencies": {
-    "adm-zip": "^0.5.10",
-    "axios": "^1.6.0",
-    "electron-is-dev": "^2.0.0",
-    "fs-extra": "^11.1.1"
-  },
-  "devDependencies": {
-    "electron": "^26.0.0",
-    "electron-builder": "^24.6.0"
+    "postinstall": "electron-builder install-app-deps",
+    "dist": "electron-builder --win"
   },
   "build": {
     "appId": "com.multigameinc.launcher",
-    "productName": "Multi Game Inc Launcher",
+    "directories": {
+      "output": "dist"
+    },
     "files": [
       "**/*"
     ],
-    "directories": {
-      "buildResources": "assets"
-    },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "assets/MultiGameInc.ico"
     },
-    "mac": {
-      "target": "dmg"
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "runAfterFinish": false,
+      "shortcutName": "MultiGameInc-Launcher",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "assets/MultiGameInc.ico",
+      "uninstallerIcon": "assets/MultiGameInc.ico",
+      "installerHeaderIcon": "assets/MultiGameInc.ico",
+      "include": "build/installer.nsh"
     },
-    "linux": {
-      "target": "AppImage"
-    }
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Pimpoli",
+        "repo": "MultiGameInc-Launcher"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^5.3.0"
+  },
+  "devDependencies": {
+    "electron": "^39.2.6",
+    "electron-builder": "^26.0.12",
+    "png-to-ico": "^3.0.1"
   }
 }
