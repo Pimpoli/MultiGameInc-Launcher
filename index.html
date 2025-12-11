@@ -1,0 +1,243 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Multi Game Inc Launcher</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#061422;
+      --muted:#9aa4b2;
+      --accent:#2dd4bf;
+      --green-1:#10b981;
+      --green-2:#059669;
+      --glass: rgba(255,255,255,0.03);
+      --text:#e6eef6;
+      --select-dark:#072033;
+      --radius:14px;
+      --card-padding:28px;
+    }
+
+    /* Base */
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(1200px 400px at 10% 10%, rgba(45,212,191,0.03), transparent 8%),
+        linear-gradient(180deg,#061220 0%, #071827 100%);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+    a{color:inherit} button{font-family:inherit; cursor:pointer}
+
+    /* App shell center */
+    .app-shell { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:18px; }
+
+    .container { width:1200px; max-width:calc(100vw - 48px); }
+
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    header img{width:56px;height:56px;border-radius:10px;object-fit:cover;box-shadow:0 8px 28px rgba(3,7,18,0.6)}
+    header h1{font-size:20px;margin:0;font-weight:700}
+    header .sub{color:var(--muted);font-size:13px;margin-top:2px}
+
+    /* Outer card + inner background */
+    .card { background: transparent; border-radius:var(--radius); padding:6px; position: relative; overflow: visible; }
+    .inner-bg {
+      background: linear-gradient(180deg, rgba(255,255,255,0.017), rgba(255,255,255,0.008));
+      border-radius: calc(var(--radius) - 4px);
+      padding: var(--card-padding);
+      box-shadow: 0 18px 60px rgba(2,6,12,0.6);
+      position: relative;
+      overflow: hidden;
+      min-height:560px;
+    }
+
+    /* Grid inside inner-bg */
+    .inner-grid { display:grid; grid-template-columns:320px 1fr; gap:26px; align-items:start; height:100%; }
+
+    /* LEFT */
+    .left{ display:flex; flex-direction:column; align-items:center; gap:16px; padding-top:6px; min-height:100%; }
+    .play-wrap{ width:240px;height:240px;border-radius:18px; display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(180deg,var(--green-1),var(--green-2)); box-shadow:0 18px 40px rgba(6,95,76,0.18), inset 0 -8px 18px rgba(0,0,0,0.12);
+      border:3px solid rgba(255,255,255,0.03); color:#05241a; font-weight:900; transition: transform .08s ease; user-select:none;
+    }
+    .play-wrap.install{ background: linear-gradient(180deg,#ff9f43,#ff7b43); color:#111; box-shadow:0 18px 40px rgba(170,80,20,0.12); }
+    .play-text{ font-size:42px; font-weight:900; letter-spacing:1px; }
+    .meta-note{ font-size:13px; color:var(--muted); text-align:center; padding:4px 6px; }
+
+    /* RIGHT */
+    .right{ display:flex; flex-direction:column; gap:14px; min-width:0; }
+    .controls{ display:flex; align-items:center; gap:12px; min-height:56px; }
+    .selects{ display:flex; gap:12px; align-items:center; flex:1 1 auto; min-width:0; }
+
+    select, input[type="text"]{
+      padding:10px 12px; border-radius:10px; background:var(--glass); border:1px solid rgba(255,255,255,0.03);
+      color:var(--text); min-height:44px; font-size:15px; outline:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      -webkit-appearance:none; -moz-appearance:none; appearance:none; min-width:0;
+    }
+    #packSelect { flex:1 1 auto; min-width:0; background: linear-gradient(180deg,var(--select-dark), #07172a); z-index:40; }
+    #loaderSelect { flex:0 0 260px; min-width:180px; max-width:320px; z-index:60; }
+
+    /* nice arrow */
+    #packSelect, #loaderSelect {
+      background-image:
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)),
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8"><path fill="%23bcded6" d="M1 1l6 5 6-5"/></svg>');
+      background-repeat:no-repeat;
+      background-position:right 12px center;
+      background-size:14px 8px;
+      padding-right:36px;
+    }
+
+    .row-compact{ display:flex; gap:12px; align-items:center; justify-content:space-between; min-height:56px; }
+    .radio-group{ display:flex; gap:14px; padding:8px 10px; background:rgba(255,255,255,0.01); border-radius:10px; align-items:center; flex:1 1 auto; min-width:0; }
+    .radio{ display:flex; gap:8px; align-items:center; color:var(--text); font-size:14px; }
+
+    .small-btn{ padding:8px 12px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--text); flex:0 0 auto; }
+
+    .path-row{ display:flex; gap:12px; align-items:center; height:36px; min-height:36px; }
+    #installPathText{ flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); min-width:0; }
+    label.checkbox{ display:flex; gap:8px; align-items:center; color:var(--muted); cursor:pointer; font-size:13px; }
+
+    .logs{
+      background: rgba(255,255,255,0.02);
+      padding:12px;
+      border-radius:8px;
+      height:220px;
+      max-height:220px;
+      overflow:auto;
+      font-family:monospace;
+      font-size:13px;
+      color:#cfece6;
+      white-space:pre-wrap;
+    }
+
+    .footer{ margin-top:auto; color:var(--muted); font-size:13px; }
+
+    /* CUSTOM SCROLLBARS (para Windows/Chromium) */
+    /* Logs and any container with class .custom-scroll will get this look */
+    .custom-scroll::-webkit-scrollbar { width:12px; height:12px; }
+    .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.06); border-radius:10px; }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border-radius:10px;
+      border: 2px solid rgba(0,0,0,0.06);
+      background-clip: padding-box;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+    }
+
+    /* Apply to logs */
+    .logs { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.06) transparent; }
+    .logs.custom-scroll { scrollbar-color: rgba(255,255,255,0.08) rgba(0,0,0,0.04); }
+
+    /* Modal overlay (darkening) and centered modal box */
+    .backdrop { position: fixed; inset:0; background: rgba(3,6,10,0.6); display:flex; align-items:center; justify-content:center; z-index:2000; }
+    .modal { width:520px; max-width: calc(100% - 32px); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; padding:18px; box-shadow:0 16px 60px rgba(0,0,0,0.6); color:var(--text); }
+    .modal h3{ margin:0 0 8px 0; font-size:18px; }
+    .modal p{ margin:0 0 12px 0; color:var(--muted); }
+
+    .modal .actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
+    .mg-btn{ padding:10px 14px; border-radius:8px; cursor:pointer; border:none; font-weight:700; }
+    .mg-btn.cancel{ background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.04); }
+    .mg-btn.confirm{ background: linear-gradient(180deg,var(--green-1),var(--green-2)); color:#05241a; box-shadow:0 8px 22px rgba(6,95,76,0.14); }
+
+    /* Splash screen */
+    .splash { position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:3000; background: linear-gradient(180deg, rgba(2,6,12,0.95), rgba(2,6,12,0.9)); color: white; }
+    .splash-card { width:520px; max-width:80%; padding:28px; border-radius:12px; text-align:center; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); box-shadow:0 20px 80px rgba(0,0,0,0.6); }
+    .splash .logo { width:68px; height:68px; margin:0 auto 8px; border-radius:10px; background:#041623; display:flex; align-items:center; justify-content:center; }
+    .splash h2{ margin:8px 0 0 0; font-size:20px; }
+    .splash p{ margin:8px 0 0 0; color:var(--muted); }
+
+    /* Progress area inside modal */
+    .progress-row { display:flex; gap:12px; align-items:center; }
+    .progress-bar { height:14px; width:100%; background: rgba(255,255,255,0.03); border-radius:10px; overflow:hidden; position:relative; }
+    .progress-bar .fill { height:100%; width:0%; background: linear-gradient(90deg,var(--accent), var(--green-2)); transition: width 220ms linear; }
+
+    .progress-meta { display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-top:8px; }
+
+    /* make logs use custom scroll */
+    .logs.custom-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03)); border:2px solid rgba(0,0,0,0.06); border-radius:10px; }
+
+    @media(max-width:1000px){
+      .inner-grid{ grid-template-columns: 1fr; }
+      .splash-card { width: 92%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="container">
+      <header>
+        <img src="./assets/multigameinc.png" alt="logo" id="logo" onerror="this.style.display='none'"/>
+        <div>
+          <h1>Multi Game Inc Launcher</h1>
+          <div class="sub">Elige el ModPack. Luego selecciona el instalador (si aplica) y presiona PLAY.</div>
+        </div>
+      </header>
+
+      <div class="card">
+        <div class="inner-bg">
+          <div class="inner-grid">
+            <div class="left">
+              <button id="btnPlay" class="play-wrap"><span class="play-text">PLAY</span></button>
+              <div class="meta-note" id="statusText">Listo</div>
+              <div class="meta-note" style="font-size:12px;color:var(--muted)">Loader instalado. Mods aplicados.</div>
+            </div>
+
+            <div class="right">
+              <div class="controls">
+                <div class="selects">
+                  <select id="packSelect" class="truncate">
+                    <option value="" selected disabled>Elige el ModPack</option>
+                  </select>
+
+                  <select id="loaderSelect" disabled class="truncate">
+                    <option value="">Elige un ModPack para ver instaladores</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row-compact">
+                <div class="radio-group">
+                  <label class="radio"><input type="radio" name="runMode" value="run" id="runModeRun" checked/> <strong>Instalar ModPack y ejecutar Minecraft</strong></label>
+                  <label class="radio"><input type="radio" name="runMode" value="install" id="runModeInstall"/> <strong>Solo Instalar ModPack</strong></label>
+                </div>
+
+                <button class="small-btn" id="btnSelectPath">Seleccionar .minecraft</button>
+              </div>
+
+              <div class="path-row">
+                <div class="muted">Ruta de instalación:</div>
+                <div id="installPathText" class="truncate">Cargando...</div>
+              </div>
+
+              <div style="margin-top:6px">
+                <label class="checkbox"><input type="checkbox" id="chkAskInstall" checked/> Preguntar para instalar loader (Forge/Fabric)</label>
+              </div>
+
+              <div class="logs custom-scroll" id="logs">Logs de instalación aparecerán aquí...</div>
+
+              <div class="footer">Repo modpacks: Pimpoli/LauncherModPack</div>
+            </div> <!-- right -->
+          </div> <!-- inner-grid -->
+        </div> <!-- inner-bg -->
+      </div> <!-- card -->
+    </div> <!-- container -->
+  </div> <!-- app-shell -->
+
+  <!-- Splash (hidden by default after init) -->
+  <div id="splash" class="splash" style="display:none">
+    <div class="splash-card">
+      <div class="logo">MG</div>
+      <h2>Multi Game Inc Launcher</h2>
+      <p id="splashText">Cargando lista de modpacks…</p>
+    </div>
+  </div>
+
+  <!-- Modal template (hidden; will be created by JS when needed) -->
+  <div id="modal-root"></div>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>
