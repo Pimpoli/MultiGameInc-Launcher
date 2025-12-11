@@ -4,6 +4,7 @@
 //  - Fallback local mejorado: prueba rutas relativas ('index.json', './index.json', './assets/index.json') en lugar de file:// absoluto
 //  - Si todo falla, no lanza excepción crítica: deja indexData vacío y muestra mensajes amigables en UI/logs
 //  - Mantiene compatibilidad con window.api expuesto por preload (selectInstallPath, installVersion, getDefaultMinecraftPath, listInstallers, onInstallProgress)
+//  - Añadida: muestra versión local/remota y fecha en la consola del launcher (UI). Marca en rojo si está desactualizado.
 
 /* ---------------------------
    Constants / DOM refs
@@ -287,6 +288,19 @@ function formatBytes(bytes) {
 }
 function escapeHtml(s) { return String(s||'').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+// --- small semver compare used by UI
+function compareSemver(a, b) {
+  if (!a || !b) return 0;
+  const pa = String(a).split('.').map(n => parseInt(n,10) || 0);
+  const pb = String(b).split('.').map(n => parseInt(n,10) || 0);
+  for (let i=0;i<Math.max(pa.length,pb.length);i++){
+    const na = pa[i]||0, nb = pb[i]||0;
+    if (na>nb) return 1;
+    if (na<nb) return -1;
+  }
+  return 0;
+}
+
 /* ---------------------------
    Installed heuristics (localStorage)
    --------------------------- */
@@ -346,6 +360,61 @@ function sanitizeJsonText(txt) {
   // trim
   s = s.trim();
   return s;
+}
+
+/* ---------------------------
+   Show version status in the UI logs (calls main via preload)
+   --------------------------- */
+async function showVersionStatusInUI() {
+  try {
+    if (!window.api || typeof window.api.checkForUpdates !== 'function') {
+      logWarn('checkForUpdates no disponible en preload (IPC).');
+      return;
+    }
+    const chk = await window.api.checkForUpdates();
+    if (!chk || !chk.ok) {
+      logWarn('checkForUpdates falló o devolvió error:', chk && chk.error ? chk.error : '(sin detalles)');
+      // still try to fetch local app_version.json via fetch (from app files packaged in renderer)
+      // note: fetching './app_version.json' will work if file is served by electron as file://
+      let localV = '0.0.0';
+      try {
+        const res = await fetch('./app_version.json', { cache: 'no-store' });
+        if (res.ok) {
+          const j = await res.json();
+          if (j && j.version) localV = String(j.version);
+        }
+      } catch (e) {}
+      logInfo(`Version ${localV} (no se pudo verificar remoto)`);
+      return;
+    }
+
+    const res = chk.result || {};
+    const localVersion = res.localVersion || res.localVersion || '0.0.0';
+    const remoteVersion = res.remoteVersion || null;
+
+    // try to fetch launcher-version.json for date (if present)
+    let remoteMeta = null;
+    try {
+      remoteMeta = await fetchJsonWithDetails('https://raw.githubusercontent.com/Pimpoli/MultiGameInc-Launcher/main/launcher-version.json');
+    } catch (e) {
+      // ignore - might not exist or be blocked
+      remoteMeta = null;
+    }
+    const remoteDateRaw = remoteMeta && (remoteMeta.date || remoteMeta.published_at) ? (remoteMeta.date || remoteMeta.published_at) : null;
+    const showDate = remoteDateRaw ? formatDateString(remoteDateRaw) : formatDateString(new Date().toISOString());
+
+    if (remoteVersion && compareSemver(remoteVersion, localVersion) > 0) {
+      // outdated
+      logErr(`Version ${localVersion} ->Esta Desactualizada`);
+      logErr(`Fecha: ${showDate}`);
+    } else {
+      // up-to-date or cannot determine
+      logOk(`Version ${localVersion}`);
+      logOk(`Fecha: ${showDate}`);
+    }
+  } catch (e) {
+    logWarn('showVersionStatusInUI error:', e && e.message ? e.message : e);
+  }
 }
 
 /* ---------------------------
@@ -424,6 +493,9 @@ async function init() {
     await new Promise(r => setTimeout(r, 350));
     hideSplash();
     setStatus('Listo');
+
+    // show version status in the UI logs
+    try { await showVersionStatusInUI(); } catch(e){ /* ignore */ }
   } catch (e) {
     hideSplash();
     setStatus('Error cargando launcher');
