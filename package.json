@@ -3,24 +3,38 @@
   "productName": "MultiGameInc-Launcher",
   "version": "1.0.0",
   "main": "main.js",
-  "description": "Breve descripción de mi app",
+  "description": "Breve descripciÃƒÂ³n de mi app",
   "author": "Mi Nombre <multigameinc@gmail.com>",
   "scripts": {
-    "postinstall": "electron-builder install-app-deps",
+    "start": "electron .",
     "dist": "electron-builder --win"
   },
   "build": {
     "appId": "com.multigameinc.launcher",
+    "asar": false,
     "directories": {
       "output": "dist"
     },
     "files": [
       "**/*"
     ],
+    "asarUnpack": [
+      "**/assets/**"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/",
+        "to": "assets",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "win": {
       "target": "nsis",
-      "icon": "assets/MultiGameInc.ico"
+      "icon": "build/MultiGameInc.ico"
     },
+    "icon": "build/MultiGameInc.ico",
     "nsis": {
       "oneClick": false,
       "perMachine": false,
@@ -29,9 +43,9 @@
       "shortcutName": "MultiGameInc-Launcher",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "installerIcon": "assets/MultiGameInc.ico",
-      "uninstallerIcon": "assets/MultiGameInc.ico",
-      "installerHeaderIcon": "assets/MultiGameInc.ico",
+      "installerIcon": "build/MultiGameInc.ico",
+      "uninstallerIcon": "build/MultiGameInc.ico",
+      "installerHeaderIcon": "build/MultiGameInc.ico",
       "include": "build/installer.nsh"
     },
     "publish": [
@@ -43,7 +57,11 @@
     ]
   },
   "dependencies": {
-    "electron-updater": "^5.3.0"
+    "adm-zip": "^0.5.16",
+    "axios": "^1.13.2",
+    "electron-is-dev": "^2.0.0",
+    "electron-updater": "^5.3.0",
+    "fs-extra": "^11.3.2"
   },
   "devDependencies": {
     "electron": "^39.2.6",
