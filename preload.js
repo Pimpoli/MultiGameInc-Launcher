@@ -6,10 +6,7 @@ contextBridge.exposeInMainWorld('api', {
   installVersion: (payload) => ipcRenderer.invoke('install-version', payload),
   getDefaultMinecraftPath: () => ipcRenderer.invoke('get-default-minecraft-path'),
   listInstallers: (manifestUrl) => ipcRenderer.invoke('list-installers', manifestUrl),
-
-  // Permite que el renderer se suscriba a eventos de progreso enviados desde main
-  // Uso en renderer: const sub = window.api.onInstallProgress(cb);
-  // sub.off() para desuscribir.
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'), // <-- agregado
   onInstallProgress: (cb) => {
     if (typeof cb !== 'function') return { off: () => {} };
     const listener = (ev, payload) => {
@@ -23,3 +20,4 @@ contextBridge.exposeInMainWorld('api', {
     };
   }
 });
+
