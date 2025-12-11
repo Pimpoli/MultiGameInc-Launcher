@@ -79,13 +79,28 @@
 
     /* nice arrow */
     #packSelect, #loaderSelect {
+      background-color: #072033 !important; /* azul oscuro */
+      color: #ffffff !important;             /* texto blanco */
+      border: 1px solid rgba(255,255,255,0.04);
+      -webkit-appearance: none;
+      appearance: none;
+      padding-right: 40px; /* espacio para la flecha */
       background-image:
-        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)),
-        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8"><path fill="%23bcded6" d="M1 1l6 5 6-5"/></svg>');
-      background-repeat:no-repeat;
-      background-position:right 12px center;
-      background-size:14px 8px;
-      padding-right:36px;
+      linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)),
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8"><path fill="%23ffffff" d="M1 1l6 5 6-5"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 14px 8px;
+    }
+
+    #packSelect option, #loaderSelect option {
+      background-color: #072033;
+      color: #ffffff;
+    }
+
+    /* si quieres que las opciones deshabilitadas se vean distintas */
+    #packSelect option[disabled], #loaderSelect option[disabled] {
+      color: #6b7a83;
     }
 
     .row-compact{ display:flex; gap:12px; align-items:center; justify-content:space-between; min-height:56px; }
