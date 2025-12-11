@@ -8,10 +8,6 @@ const AdmZip = require('adm-zip');
 const REMOTE_BASE_RAW = 'https://raw.githubusercontent.com/Pimpoli/MultiGameInc-Launcher/main';
 const REMOTE_VERSION_URL = `${REMOTE_BASE_RAW}/launcher-version.json`;
 
-/**
- * compareSemver(a,b)
- * retorna 1 si a>b, 0 si igual, -1 si a<b
- */
 function compareSemver(a, b) {
   if (!a || !b) return 0;
   const pa = String(a).split('.').map(n => parseInt(n, 10) || 0);
@@ -25,11 +21,6 @@ function compareSemver(a, b) {
   return 0;
 }
 
-/**
- * getLocalVersion(appRoot, userDataPath)
- * - intenta leer app_version.json en la raíz del app (appRoot)
- * - si no existe, intenta userData/launcher-version.json
- */
 async function getLocalVersion(appRoot, userDataPath) {
   try {
     const p1 = path.join(appRoot, 'app_version.json');
@@ -42,17 +33,10 @@ async function getLocalVersion(appRoot, userDataPath) {
       const j = await fs.readJson(p2);
       return (j && j.version) ? j.version : null;
     }
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) {}
   return null;
 }
 
-/**
- * checkForUpdates(options)
- * - options: { appRoot, userDataPath, logger } 
- * - retorna { updateAvailable, remoteVersion, localVersion, releaseZipUrl, tmpZipPath, tmpExtractDir } 
- */
 async function checkForUpdates(opts = {}) {
   const { appRoot = __dirname, userDataPath = path.join(os.homedir(), '.multi-game-inc-launcher'), logger = console } = opts;
 
@@ -71,7 +55,7 @@ async function checkForUpdates(opts = {}) {
       return { updateAvailable: false, reason: 'no_remote_version' };
     }
     const remoteVersion = remote.version;
-    const releaseZip = remote.release_zip; // ejemplo: releases/launcher-1.0.1.zip
+    const releaseZip = remote.release_zip;
     logger.log('[updater] remoteVersion=', remoteVersion, ' release_zip=', releaseZip);
 
     const cmp = compareSemver(remoteVersion, localVersion || '0.0.0');
@@ -79,7 +63,6 @@ async function checkForUpdates(opts = {}) {
 
     if (!releaseZip) return { updateAvailable: true, remoteVersion, localVersion, reason: 'no_zip' };
 
-    // download zip from raw github path
     const zipUrl = `${REMOTE_BASE_RAW}/${releaseZip.replace(/^\/+/,'')}`;
     logger.log('[updater] will download zip from', zipUrl);
 
@@ -92,7 +75,6 @@ async function checkForUpdates(opts = {}) {
       return { updateAvailable: true, remoteVersion, localVersion, reason: 'zip_download_failed', status: dl.status };
     }
     await fs.writeFile(tmpZipPath, Buffer.from(dl.data));
-    // extract
     const extractDir = path.join(tmpBase, 'extracted');
     await fs.mkdirp(extractDir);
     try {
@@ -110,15 +92,8 @@ async function checkForUpdates(opts = {}) {
   }
 }
 
-/**
- * applyUpdate(tmpExtractDir, targetDir, opts)
- * - copia (sobrescribe) tmpExtractDir -> targetDir
- * - opts.remoteVersion (opcional): si se proporciona, escribe app_version.json con esa versión
- * - devuelve { ok, error, wroteVersionFile }
- */
 async function applyUpdate(tmpExtractDir, targetDir, opts = {}) {
   try {
-    // copiar recursivamente sobrescribiendo
     await fs.copy(tmpExtractDir, targetDir, { overwrite: true, recursive: true, errorOnExist: false });
 
     let wroteVersionFile = false;
@@ -128,10 +103,7 @@ async function applyUpdate(tmpExtractDir, targetDir, opts = {}) {
         await fs.writeJson(verFile, { version: String(opts.remoteVersion) }, { spaces: 2 });
         wroteVersionFile = true;
       }
-    } catch (e) {
-      // no queremos fallar la actualización solo por no poder escribir el version file
-      wroteVersionFile = false;
-    }
+    } catch (e) { wroteVersionFile = false; }
 
     return { ok: true, wroteVersionFile };
   } catch (e) {
