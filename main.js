@@ -5,6 +5,7 @@
 */
 
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const isDev = require('electron-is-dev');
 const fs = require('fs-extra');
@@ -30,6 +31,9 @@ function defaultMinecraftPathForPlatform() {
 }
 
 function createWindow() {
+   const win = new BrowserWindow({ width: 800, height: 600, /* … */ });
+  win.loadFile('index.html');
+
   mainWindow = new BrowserWindow({
     width: 1250,
     height: 720,
@@ -266,6 +270,7 @@ ipcMain.handle('check-for-updates', async () => {
 app.whenReady().then(async () => {
   try {
     createWindow();
+    autoUpdater.checkForUpdatesAndNotify();
 
     // Background update check (non bloqueante)
     if (updater && typeof updater.checkForUpdates === 'function') {
@@ -304,7 +309,7 @@ app.whenReady().then(async () => {
                   const testPath = path.join(targetDir, `.updater_test_${Date.now()}`);
                   await fs.outputFile(testPath, 'test').catch(()=>{ throw new Error('no_write'); });
                   await fs.remove(testPath).catch(()=>{});
-                  const applyRes = await updater.applyUpdate(check.tmpExtractDir, targetDir);
+                  const applyRes = await updater.applyUpdate(check.tmpExtractDir, targetDir, { remoteVersion: check.remoteVersion });
                   if (applyRes && applyRes.ok) {
                     await dialog.showMessageBox({
                       type: 'info',
